@@ -1,0 +1,5 @@
+upstream = "https://neatdns.ustclug.org/resolve"
+
+bootstrap = "101.6.6.6#53"
+
+listen = "127.0.0.1#53"
