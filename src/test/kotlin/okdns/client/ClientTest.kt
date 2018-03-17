@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
             InetSocketAddress(5454)
     )
 
-    logger.level = Level.ALL
+    logger.level = Level.WARNING
 
     doh_client.start()
 }

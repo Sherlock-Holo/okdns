@@ -32,8 +32,6 @@ class BootstrapDns(private val bootstrapNameserverAddress: InetSocketAddress, pr
             val answerByteArray = ByteArray(512)
             val answerPacket: DatagramPacket
 
-//            logger.info(message.header.QDCOUNT.toString())
-
             try {
                 bootstrapNameserver.send(datagramPacket)
 
