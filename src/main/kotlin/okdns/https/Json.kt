@@ -25,6 +25,7 @@ class Json {
     var Comment: String? = null
     var Question: List<QuestionBean>? = null
     var Answer: List<AnswerBean>? = null
+    var Authority: List<AnswerBean>? = null
 
     class QuestionBean {
         /**
