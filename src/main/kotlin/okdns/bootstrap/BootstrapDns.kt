@@ -1,6 +1,7 @@
 package okdns.bootstrap
 
 import ktdns.core.message.Message
+import ktdns.core.message.Record
 import ktdns.core.parse.Parse
 import okdns.logger
 import okhttp3.Dns
@@ -45,13 +46,13 @@ class BootstrapDns(private val bootstrapNameserverAddress: InetSocketAddress, pr
 
             val answerMessage = parse.parseAnswer(answerByteArray)
 
-            var aAnswer: Message.Companion.AAnswer? = null
-            var aaaaAnswer: Message.Companion.AAAAAnswer? = null
+            var aAnswer: Record.AAnswer? = null
+            var aaaaAnswer: Record.AAAAAnswer? = null
             answerMessage.answers.forEach {
                 when (it.TYPE) {
-                    Message.Companion.AnswerType.A -> aAnswer = Message.Companion.AAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
+                    Record.RecordType.A -> aAnswer = Record.AAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
 
-                    Message.Companion.AnswerType.AAAA -> aaaaAnswer = Message.Companion.AAAAAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
+                    Record.RecordType.AAAA -> aaaaAnswer = Record.AAAAAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
 
                     else -> {
                     }

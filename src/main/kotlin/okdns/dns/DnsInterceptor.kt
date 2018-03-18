@@ -1,6 +1,7 @@
 package okdns.dns
 
 import ktdns.core.message.Message
+import ktdns.core.message.Record
 import ktdns.interceptor.Interceptor
 import ktdns.interceptor.chain.Chain
 import okdns.https.Json
@@ -63,11 +64,11 @@ class DnsInterceptor(private val client: OkHttpClient, private val url: HttpUrl)
         json.Answer?.forEach {
             message.addAnswer(
                     when (it.type) {
-                        1 -> Message.Companion.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        1 -> Record.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
-                        28 -> Message.Companion.AAAAAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        28 -> Record.AAAAAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
-                        5 -> Message.Companion.CNAMEAnswer(it.name!!, 1, it.TTL, it.data!!)
+                        5 -> Record.CNAMEAnswer(it.name!!, 1, it.TTL, it.data!!)
 
                         else -> TODO("other type is not implement")
                     }
@@ -77,11 +78,11 @@ class DnsInterceptor(private val client: OkHttpClient, private val url: HttpUrl)
         json.Authority?.forEach {
             message.addAnswer(
                     when (it.type) {
-                        1 -> Message.Companion.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        1 -> Record.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
-                        28 -> Message.Companion.AAAAAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        28 -> Record.AAAAAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
-                        5 -> Message.Companion.CNAMEAnswer(it.name!!, 1, it.TTL, it.data!!)
+                        5 -> Record.CNAMEAnswer(it.name!!, 1, it.TTL, it.data!!)
 
                         else -> TODO("other type is not implement")
                     }

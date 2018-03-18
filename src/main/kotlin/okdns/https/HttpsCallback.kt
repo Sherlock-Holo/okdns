@@ -1,6 +1,7 @@
 package okdns.https
 
 import ktdns.core.message.Message
+import ktdns.core.message.Record
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -20,9 +21,9 @@ class HttpsCallback(private val message: Message) : Callback {
         json.Answer!!.forEach {
             message.addAnswer(
                     when (it.type) {
-                        1 -> Message.Companion.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        1 -> Record.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
-                        28 -> Message.Companion.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
+                        28 -> Record.AAnswer(it.name!!, 1, it.TTL, InetAddress.getByName(it.data!!))
 
                         else -> TODO("other type is not implement")
                     }
