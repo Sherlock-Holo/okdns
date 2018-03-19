@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
 
     val config = Config(args[0])
 
-    val client = Client(config.upstream, config.bootstrap, config.listen)
+    val client = Client(config.upstream, config.bootstrap, config.listen, config.edns_ecs)
 
     client.start()
 }

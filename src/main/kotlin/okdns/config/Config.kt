@@ -19,4 +19,6 @@ class Config(path: String) {
 
     val bootstrap = InetSocketAddress(bootstrapInfo.split('#')[0], bootstrapInfo.split('#')[1].toInt())
     val listen = InetSocketAddress(listenInfo.split('#')[0], listenInfo.split('#')[1].toInt())
+
+    val edns_ecs get() = toml["edns_ecs"] as Boolean
 }
