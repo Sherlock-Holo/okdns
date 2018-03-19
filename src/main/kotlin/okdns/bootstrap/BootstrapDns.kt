@@ -2,76 +2,56 @@ package okdns.bootstrap
 
 import ktdns.core.message.Message
 import ktdns.core.message.Record
-import ktdns.core.parse.Parse
-import okdns.logger
+import ktdns.example.SimpleQuery
+import okdns.OkdnsException
 import okhttp3.Dns
 import java.io.IOException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.util.concurrent.ConcurrentHashMap
 
 class BootstrapDns(private val bootstrapNameserverAddress: InetSocketAddress, private val v6: Boolean = false) : Dns {
-    private var address: MutableList<InetAddress>? = null
-    private val bootstrapNameserver = DatagramSocket()
-    private val parse = Parse()
+    private val addressMap = ConcurrentHashMap<String, MutableList<InetAddress>>()
 
-    override fun lookup(hostname: String): MutableList<InetAddress> {
-        if (address == null) {
-            val question = Message.Question().apply {
-                this.QCLASS = 1
-                this.QNAME = "$hostname."
-                this.QTYPE =
-                        if (v6) 28
-                        else 1
-            }
+    override fun lookup(hostname: String) = addressMap[hostname] ?: realLookup(hostname)
 
-            val message = Message.buildQuery(question)
-            val byteArray = message.byteArray
-            val datagramPacket = DatagramPacket(byteArray, byteArray.size, bootstrapNameserverAddress)
+    private fun realLookup(hostname: String): MutableList<InetAddress> {
+        val question = Message.Question().apply {
+            this.QCLASS = 1
+            this.QNAME = "$hostname."
+            this.QTYPE =
+                    if (v6) 28
+                    else 1
+        }
 
-            val answerByteArray = ByteArray(512)
-            val answerPacket: DatagramPacket
+        val queryMessage = Message.buildQuery(question)
+        val answerMessage = try {
+            SimpleQuery.query(queryMessage, bootstrapNameserverAddress)
+        } catch (e: IOException) {
+            return lookup(hostname)
+        }
 
-            try {
-                bootstrapNameserver.send(datagramPacket)
+        var aAnswer: Record.AAnswer? = null
+        var aaaaAnswer: Record.AAAAAnswer? = null
+        answerMessage.answers.forEach {
+            when (it.TYPE) {
+                Record.RecordType.A -> aAnswer = Record.AAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
 
-                answerPacket = DatagramPacket(answerByteArray, answerByteArray.size, bootstrapNameserverAddress)
-                bootstrapNameserver.receive(answerPacket)
-                logger.info("get https IP from custom nameserver")
-            } catch (e: IOException) {
-                logger.warning("get https IP from custom nameserver failed, use system nameserver")
-                return Dns.SYSTEM.lookup(hostname).apply { address = this }
-            }
+                Record.RecordType.AAAA -> aaaaAnswer = Record.AAAAAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
 
-            val answerMessage = parse.parseAnswer(answerByteArray)
-
-            var aAnswer: Record.AAnswer? = null
-            var aaaaAnswer: Record.AAAAAnswer? = null
-            answerMessage.answers.forEach {
-                when (it.TYPE) {
-                    Record.RecordType.A -> aAnswer = Record.AAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
-
-                    Record.RecordType.AAAA -> aaaaAnswer = Record.AAAAAnswer(it.NAME, it.CLASS, it.TTL, InetAddress.getByAddress(it.RDATA))
-
-                    else -> {
-                    }
+                else -> {
                 }
             }
+        }
 
-            val result = ArrayList<InetAddress>()
-            if (aaaaAnswer != null) result.add(aaaaAnswer!!.address)
-            if (aAnswer != null) result.add(aAnswer!!.address)
-            return if (result.isEmpty()) Dns.SYSTEM.lookup(hostname).apply {
-                address = this
-                logger.warning("custom nameserver return empty result")
-            }
-            else {
-                address = result.toMutableList()
-                address!!
-            }
-        } else {
-            return address!!
+        val result = ArrayList<InetAddress>()
+        if (aaaaAnswer != null) result.add(aaaaAnswer!!.address)
+        if (aAnswer != null) result.add(aAnswer!!.address)
+
+        if (result.isEmpty()) throw OkdnsException("bootstrap failed")
+        else {
+            addressMap[hostname] = result.toMutableList()
+            return addressMap[hostname]!!
         }
     }
 }
