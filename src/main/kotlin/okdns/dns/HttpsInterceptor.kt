@@ -31,15 +31,26 @@ class HttpsInterceptor(
                     var addEDNS_ECS = false
                     if (EDNS_ECS) {
                         message.additional.forEach {
-                            if (Record.EDNS_ECS::class.java.isInstance(it)) {
-                                it as Record.EDNS_ECS
-                                this.addQueryParameter("edns_client_subnet", it.realEDNSIP.hostAddress + "/${it.sourceNetMask}")
-                                addEDNS_ECS = true
+                            if (it.TYPE == Record.RecordType.EDNS) {
+                                it as Record.EDNSRecord
+                                it.optionDatas.forEach {
+                                    if (Record.EDNSRecord.ECS_DATA::class.java.isInstance(it)) {
+                                        it as Record.EDNSRecord.ECS_DATA
+                                        this.addQueryParameter(
+                                                "edns_client_subnet",
+                                                it.ECS_IP.hostAddress + "/${it.sourceNetMask}"
+                                        )
+                                        addEDNS_ECS = true
+                                    }
+                                }
                             }
                         }
 
                         if (!addEDNS_ECS) {
-                            this.addQueryParameter("edns_client_subnet", okdns.dns.HttpsInterceptor.myIP.hostAddress + "/24")
+                            this.addQueryParameter(
+                                    "edns_client_subnet",
+                                    InetAddress.getByAddress(okdns.dns.HttpsInterceptor.myIP.address.apply { this[3] = 0 }).hostAddress + "/24"
+                            )
                         }
                     }
                 }

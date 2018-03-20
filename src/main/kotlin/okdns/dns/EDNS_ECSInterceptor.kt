@@ -10,9 +10,14 @@ class EDNS_ECSInterceptor : Interceptor {
         val message = chain.message
 
         message.additional.forEach {
-            if (Record.EDNS_ECS::class.java.isInstance(it)) {
-                it as Record.EDNS_ECS
-                it.scopeNetMask = it.sourceNetMask
+            if (it.TYPE == Record.RecordType.EDNS) {
+                it as Record.EDNSRecord
+                it.optionDatas.forEach {
+                    if (Record.EDNSRecord.ECS_DATA::class.java.isInstance(it)) {
+                        it as Record.EDNSRecord.ECS_DATA
+                        it.scopeNetMask = it.sourceNetMask
+                    }
+                }
             }
         }
 
